@@ -1,0 +1,199 @@
+package com.example.simon.dtup_pladsapp;
+
+import android.support.annotation.NonNull;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.util.Log;
+import android.widget.TableLayout;
+import android.widget.TableRow;
+import android.widget.TextView;
+
+import org.eclipse.paho.android.service.MqttAndroidClient;
+import org.eclipse.paho.client.mqttv3.IMqttActionListener;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+
+
+public class AccountManagementActivity extends AppCompatActivity {
+
+    private String DEBUG_TAG = "DEBUG_TAG";
+    // channels/<channelID>/subscribe/<format>/<api-key> - subscribe to channel feed
+    // channels/620356/subscribe/fields/+/<api-key> - subscribe to all fields of channel
+
+    private String topic = "channels/620356/subscribe/fields/+/7Z95VND9RMGN8W4N";
+    private String topic_without_api_key = "channels/620356/subscribe/fields/+/";
+    private String weather_topic = "channels/620356/subscribe/json";
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_account_management);
+
+        // test data
+        String[][] UserData = new String[][] { {"1", "Julian", "Admin"},
+                {"2", "Simon", "Admin"},
+                {"3", "Jakob", "Underviser"},
+                {"4", "Fremmede", "Hacker"}};
+
+
+        fillUserTable(UserData);
+
+
+
+        String clientID = MqttClient.generateClientId();
+        final MqttAndroidClient mqttAndroidClient = new MqttAndroidClient(this.getApplicationContext(), "mqtt.thingspeak.com:1883", clientID);
+
+        new Thread() {
+            public void run() {
+                //test_klient(); // forbinder til egen server
+
+
+                try {
+                    //subscribe(mqttAndroidClient, topic, 0); // forbind til MQTT broker
+                    minSubscribe();
+                } catch (MqttException e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
+    }
+
+
+    public void fillUserTable(String[][] UserData){
+
+
+        // 1. løsning.  -- Problem med at aligne texten
+        TextView tv = findViewById(R.id.testview);
+        tv.setText(""); // klargør textview til brug
+        tv.setTextSize(20);
+        for (int i = 0; i < UserData.length; i++) //
+        {
+            tv.append(UserData[i][0] + "            " + UserData[i][1] + "            " + UserData[i][2] + "\n");
+        }
+
+
+
+        // 2. løsning -- CLEAN! men underlidt mikroproblem med, at der er 4 rækker pr collonne selvom jeg kun har tilføjet 3.
+        TableLayout table = findViewById(R.id.testTable);
+
+        for (int j = 0; j < UserData.length; j++) {
+            TableRow tr = new TableRow(this);
+            TextView tv_empty = new TextView(this);
+            tv_empty.setText("");
+            tr.addView(tv_empty); // fix for førnævnte fejl
+            for (int i = 0; i < 3; i++) {
+
+                TextView tv_table = new TextView(this);
+                tv_table.setText(UserData[j][i]);
+                tr.addView(tv_table);
+            }
+            table.addView(tr);
+        }
+    }
+
+
+    /*
+     * Forbinder til server. Virker uden problemer
+     */
+    public void test_klient() {
+        try {
+            Socket s = new Socket("192.168.1.102", 8002);
+
+            PrintWriter ud = new PrintWriter(s.getOutputStream());
+            BufferedReader ind = new BufferedReader(new InputStreamReader(s.getInputStream()));
+
+            ud.println("Users");
+            ud.flush();
+
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    /*
+     * MQTT client subscribe
+     */
+    public void subscribe(@NonNull MqttAndroidClient client, @NonNull final String topic, int qos) throws MqttException {
+        IMqttToken token = null;
+        token = client.connect();
+        client.subscribe(topic, qos);
+
+        String test = client.getServerURI();
+        Log.d(DEBUG_TAG, test);
+
+        token.setActionCallback(new IMqttActionListener() {
+
+            @Override
+            public void onSuccess(IMqttToken iMqttToken) {
+                Log.d(DEBUG_TAG, "Subscribe Successfully " + topic);
+                String topic[] = iMqttToken.getTopics();
+
+                for (String s : topic){
+                    Log.d(DEBUG_TAG,"Modtog: " + s );
+                }
+            }
+
+            @Override
+            public void onFailure(IMqttToken iMqttToken, Throwable throwable) {
+                Log.d(DEBUG_TAG, "Subscribe Failed " + topic);
+            }
+        });
+    }
+
+
+    public void minSubscribe() throws MqttException {
+        String clientID = MqttClient.generateClientId();
+        final MqttAndroidClient mqttClient = new MqttAndroidClient(this.getApplicationContext(), "mqtt.thingspeak.com:1883", clientID);
+
+        MqttConnectOptions connOpts = new MqttConnectOptions();
+        connOpts.setUserName("user");
+        char[] pass =  "7Z95VND9RMGN8W4N".toCharArray();
+
+
+        // tjekker password
+        for (int i = 0; i < pass.length; i++){
+            Log.d(DEBUG_TAG, "" + pass[i]);
+        }
+        Log.d(DEBUG_TAG,"" +  pass);
+        connOpts.setPassword(pass);
+
+
+        IMqttToken token = mqttClient.connect(connOpts);    // fejler her. jeg tror vi skal supplere med brugernavn/pass    https://blogs.mathworks.com/iot/2017/11/10/subscribe-to-thingspeak-iot-data-using-mqtt/
+
+        token.setActionCallback(new IMqttActionListener() {
+            @Override
+            public void onSuccess(IMqttToken arg0) {
+                try {
+
+                    mqttClient.subscribe(weather_topic, 0, null, new IMqttActionListener() {
+                        @Override
+                        public void onSuccess(IMqttToken asyncActionToken) {
+                            Log.d(DEBUG_TAG, "Successfully subscribed to topic.");
+                        }
+
+                        @Override
+                        public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                            Log.d(DEBUG_TAG, "Failed to subscribed to topic.");
+                        }
+                    });
+                } catch (MqttException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(IMqttToken arg0, Throwable arg1) {
+                Log.d(DEBUG_TAG, "FEJLLLLLLLLLLLLLLLLLL i connect");
+            }
+        });
+    }
+}
