@@ -111,7 +111,8 @@ int main() {
 	printf("ERROR, data transmission to thingspeak failed.\nReturned with code %d\n", rc);
 	}
 	
-	printf("Waiting 15 seconds...");
+	printf("\nWaiting 15 seconds...");
+	flush;
         usleep(15000000); // sleep 15 seconds since thingspeak only accepts data every 15'th second.
     }
 }
