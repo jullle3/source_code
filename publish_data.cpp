@@ -33,8 +33,6 @@ void setup(int uart0_filestream ){
 
 int main() {
 	
-    pubmsg.qos = QOS;
-    pubmsg.retained = 0;
     int fd = -1;
 
     fd = open("/dev/ttyAMA0", O_RDWR | O_NOCTTY);
@@ -69,6 +67,9 @@ int main() {
 		printf("Failed to connect, return code %d\n", rc);
 		exit(-1);
 	}
+	     
+        pubmsg.qos = QOS;
+        pubmsg.retained = 0;
 
     int n = read(fd, (void*) rx_buf, 22);
     if(n != -1){
