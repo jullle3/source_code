@@ -85,13 +85,13 @@ int main() {
         cout << endl << "Der måles: " << sensor << endl << endl;
         if(sensor >= 300){
             cout << "P-plads ledig" << endl;
-            payload = "field1=1&field2=-1";
+            payload = "field1=0&field2=-1";
             pubmsg.payload = payload;
             pubmsg.payloadlen = strlen(payload);
         }
         if(sensor < 300){
             cout << "P-plads optaget" << endl;
-	    payload = "field1=0&field2=-1";
+	    payload = "field1=1&field2=-1";
 	    pubmsg.payload = payload;
  	    pubmsg.payloadlen = strlen(payload);
         }
@@ -103,5 +103,7 @@ int main() {
         rc = MQTTClient_waitForCompletion(client, token, TIMEOUT);
         printf("Message with delivery token %d delivered\n", token);
         }
+	 
+        usleep(15000000);
     }
 }
