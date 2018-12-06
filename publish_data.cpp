@@ -91,7 +91,9 @@ int main() {
         }
         if(sensor < 300){
             cout << "P-plads optaget" << endl;
-            pubmsg.payload = "field1=0&field2=-1";
+	    payload = "field1=0&field2=-1";
+	    pubmsg.payload = payload;
+ 	    pubmsg.payloadlen = strlen(payload);
         }
         MQTTClient_publishMessage(client, TOPIC, &pubmsg, &token);
         printf("Waiting for up to %d seconds for publication of %s\n"
