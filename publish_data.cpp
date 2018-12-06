@@ -32,9 +32,7 @@ void setup(int uart0_filestream ){
 }
 
 int main() {
-
-
-
+	
     pubmsg.qos = QOS;
     pubmsg.retained = 0;
     int fd = -1;
@@ -49,29 +47,28 @@ int main() {
     }
     usleep(10000);
     char rx_buf[22];
-	char *payload;
+    char *payload;
 
-	
-
- while(1) {
-
+     // endless loop for MQTT connection and data transfer
+     while(1) {
+  
 	 // connect MQTT
-		MQTTClient client;
-		MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
-		conn_opts.username = "test";
-		conn_opts.password = "7Z95VND9RMGN8W4N";
-		MQTTClient_message pubmsg = MQTTClient_message_initializer;
-		MQTTClient_deliveryToken token;
-		int rc;
-		MQTTClient_create(&client, ADDRESS, CLIENTID, MQTTCLIENT_PERSISTENCE_NONE, NULL);
-		conn_opts.keepAliveInterval = 20;
-		conn_opts.cleansession = 1;
-		
-		if ((rc = MQTTClient_connect(client, &conn_opts)) != MQTTCLIENT_SUCCESS)
-		{
-			printf("Failed to connect, return code %d\n", rc);
-			exit(-1);
-		}
+	MQTTClient client;
+	MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
+	conn_opts.username = "test";
+	conn_opts.password = "7Z95VND9RMGN8W4N";
+	MQTTClient_message pubmsg = MQTTClient_message_initializer;
+	MQTTClient_deliveryToken token;
+	int rc;
+	MQTTClient_create(&client, ADDRESS, CLIENTID, MQTTCLIENT_PERSISTENCE_NONE, NULL);
+	conn_opts.keepAliveInterval = 20;
+	conn_opts.cleansession = 1;
+
+	if ((rc = MQTTClient_connect(client, &conn_opts)) != MQTTCLIENT_SUCCESS)
+	{
+		printf("Failed to connect, return code %d\n", rc);
+		exit(-1);
+	}
 
     int n = read(fd, (void*) rx_buf, 22);
     if(n != -1){
