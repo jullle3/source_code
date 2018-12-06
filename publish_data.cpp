@@ -101,9 +101,15 @@ int main() {
                (int)(TIMEOUT/1000), payload, TOPIC, CLIENTID);
                
         rc = MQTTClient_waitForCompletion(client, token, TIMEOUT);
-        printf("Message with delivery token %d delivered\n", token);
-        }
-	 
-        usleep(15000000);
+        //printf("Message with delivery token %d delivered\n", token);
+        } else{ 
+	    cout << "error, no data received on uart" << endl; 
+    }  
+	if (rc == 2){
+	cout << "successfully sent data to thingspeak servers" << endl;
+	} else{
+	printf("error, data transmission to thingspeak failed.\nReturned with code %d\n", rc);
+	}
+        usleep(15000000); // sleep 15 seconds since thingspeak only accepts data every 15'th second.
     }
 }
