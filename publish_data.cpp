@@ -106,13 +106,13 @@ int main() {
 	    cout << "ERROR, no data received on uart" << endl; 
     }  
 	if (rc == 0){
-	cout << "successfully sent data to thingspeak servers" << endl;
+	cout << "Successfully sent data to thingspeak servers" << endl;
 	} else{
 	printf("ERROR, data transmission to thingspeak failed.\nReturned with code %d\n", rc);
 	}
 	
 	printf("\nWaiting 15 seconds...");
-	flush;
+	flush();
         usleep(15000000); // sleep 15 seconds since thingspeak only accepts data every 15'th second.
     }
 }
