@@ -113,6 +113,7 @@ int main() {
 	
 	printf("\nWaiting 15 seconds...");
 	flush();
+	     
         usleep(15000000); // sleep 15 seconds since thingspeak only accepts data every 15'th second.
     }
 }
