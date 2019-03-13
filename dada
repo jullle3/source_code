@@ -1,0 +1,9 @@
+https://www.youtube.com/watch?v=Y34uvi8-e18 - rigtig god guide
+
+sudo -H pip install openpyxl
+sudo -H pip install ujson
+sudo -H pip install jupyter
+mitm!
+
+
+sæt HOST DNS til ip adresse af INetSim VM, og da får Cuckoo VM adgang til INetSim 'net'
