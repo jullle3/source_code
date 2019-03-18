@@ -1,0 +1,24 @@
+gå til højre øvre hjørne og kig på settings
+
+prøv ifdown, ifup - til at slukke og starte interface
+
+
+FILES og hvad de indeholder
+definitions of network interfaces See interfaces(5) for more information.
+       /etc/network/interfaces
+# interfaces(5) file used by ifup(8) and ifdown(8)
+auto lo
+iface lo inet loopback
+
+#overvej at tvinge systemet til at opsætte enp0s25 interfacet
+auto enp0s25
+iface enp0s25 inet dhcp 
+ 
+# denne kommando genstarter servicen - sudo /etc/init.d/networking restart
+      
+
+
+current state of network interfaces
+       	/run/network/ifstat
+	lo=lo
+
