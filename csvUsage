@@ -1,0 +1,37 @@
+import csv
+import random
+
+letters = "abcdefghijklmnopqrstuvwxyz"
+def write():
+    with open("data.csv", "w", newline='') as csvfile:
+        write = csv.writer(csvfile, delimiter=",")
+        for x in range (1000):
+            write.writerow([randomString()] + ["ja3hash"])
+
+def read():
+    oldfile = "/home/julian/Desktop/arbejde/JA3Hash_samling/results/result.csv"
+    newfile = "/home/julian/Desktop/arbejde/JA3Hash_samling/results/newresult.csv"
+
+    duplicates = 0
+    duplicates_list = []
+    newfile = open(newfile, "w")
+    with open(oldfile, "r") as csvfile:
+        reader = csv.reader(csvfile, delimiter=",")
+        for row in reader:
+            if row[0] not in duplicates_list:  # skriv
+                newfile.write(','.join(row) + "\n")
+                duplicates_list.append(row[0])
+            else:
+                print("duplicate", row[0])
+                duplicates += 1
+    print("duplicates total:", duplicates)
+
+
+
+def randomString():
+    return ''.join(random.choice(letters) for x in range (3))
+
+#write() # blot til test
+
+
+read()
