@@ -99,7 +99,7 @@ void define_section() {
   // Hver process skal have sin egen first og last som angiver antallet af steps der skal beregnes
   // Eksempel: process 0 tager 0-1000, 1 1000-2000 osv, men process 7 tager 7000-7999 
   
-  first = taskid * position / comm_sz;  
+  first = taskid * positions / comm_sz;  
   if (taskid != comm_sz-1) {
 	last  = first + 1000;  
   } else {
