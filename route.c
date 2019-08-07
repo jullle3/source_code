@@ -29,7 +29,7 @@ int positions = 0; // antalet af positioner
 
 /* Identity info (not used in this version) */
 #define MASTER 0
-int process_id, comm_sz;
+int taskid, comm_sz;
 
 /* Local section positions */
 int first, last;
@@ -332,9 +332,9 @@ int main(int argc, char* args[]){
    
   read_route(args[1]);
 
-  MPI_Init(&argc, &argv);
+  MPI_Init(&argc, &args);
   MPI_Comm_rank(MPI_COMM_WORLD, &taskid); // rank for denne process
-  MPI_Comm_size(MPI_COMM_WORLD, &numtasks);  // antal proceser i den givne communicator
+  MPI_Comm_size(MPI_COMM_WORLD, &comm_sz);  // antal proceser i den givne communicator
 
 
   if (taskid == MASTER) start = get_current_time_seconds();  // kun master tager timings
