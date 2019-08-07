@@ -354,6 +354,7 @@ int main(int argc, char* args[]){
   print_height_median();
 
   if (taskid == MASTER) {
+        MPI_Barrier(MPI_COMM_WORLD);  // Venter på andre processer
 	end = get_current_time_seconds();
 	printf("Elapsed time: %1.12f sec\n", end-start);		
   }
