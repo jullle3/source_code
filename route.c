@@ -345,8 +345,23 @@ int main(int argc, char* args[]){
   if (taskid == MASTER) start = get_current_time_seconds();  // kun master tager timings
 
   define_section();  // Opetter sektioner som process i skal bearbejde
-
   calc_dist();  // Beregner de givne sektioner
+	
+  MPI_Barrier(MPI_COMM_WORLD); // Sikrer os at alle processer er færdige med afstandsberegning
+  // Samle alle afstandsberegningerne pr. opgavepunkt 4, som lagres i (double) global_length for alle processer
+  int send_sz = 1;
+  int recv_sz = 1;
+  double* input_buffer;
+  input_buffer = malloc(recv_sz*sizeof(double));
+  MPI_Allgather(global_length, send_sz, MPI_DOUBLE, input_buffer, recv_sz, MPI_COMM_WORLD);  
+ 
+  if (taskid == MASTER) {
+	  double distance;
+	  for (i = 0; i < comm_sz; i++) {
+		distance = input_buffer[*i];
+		print("DISTANCE %d", distance);
+	  }
+  }
   print_route();
  
   find_extremes();
