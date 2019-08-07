@@ -353,10 +353,11 @@ int main(int argc, char* args[]){
   int recv_sz = 1;
   double* input_buffer;
   input_buffer = malloc(recv_sz*sizeof(double));
-  MPI_Allgather(global_length, send_sz, MPI_DOUBLE, input_buffer, recv_sz, MPI_COMM_WORLD);  
+  MPI_Allgather(global_length, send_sz, MPI_DOUBLE, input_buffer, recv_sz, MPI_DOUBLE, MPI_COMM_WORLD);  
  
   if (taskid == MASTER) {
 	  double distance;
+	  int i;
 	  for (i = 0; i < comm_sz; i++) {
 		distance = input_buffer[*i];
 		print("DISTANCE %d", distance);
