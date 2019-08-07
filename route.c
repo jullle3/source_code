@@ -354,7 +354,7 @@ int main(int argc, char* args[]){
   print_height_median();
 
   if (taskid == MASTER) {
-	end = get_current_time_seconds1();
+	end = get_current_time_seconds();
 	printf("Elapsed time: %1.12f sec\n", end-start);		
   }
 
