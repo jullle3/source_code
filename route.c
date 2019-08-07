@@ -1,4 +1,4 @@
-/* route.c 
+/* route.c
 
 02346, F19, DTU
 
@@ -14,9 +14,9 @@ For instructions, see Databar Exercise 4
 #include <sys/time.h>
 #include <time.h>
 
-#define  MASTER		0
+#define  MASTER         0
 
-/* Route data structure */ 
+/* Route data structure */
 #define MAX_POS 10000
 
 double  lat[MAX_POS];
@@ -44,11 +44,11 @@ double global_longest_ascent;
 
 /* Height median */
 int global_height_median;
-	
+
 
 
 #define PI 3.14159265358979323846
-#define R1 6371009                   // Earth's  middle radius (m) 
+#define R1 6371009                   // Earth's  middle radius (m)
 
 /* Not to be changed */
 double distance(double lat1, double lon1, double lat2, double lon2) {
@@ -89,7 +89,7 @@ void read_route(char * name){
       printf("Error: Route file too big\n");
       exit(1);
     }
-  }  
+  }
 
   positions = pos;
 }
@@ -97,21 +97,23 @@ void read_route(char * name){
 void define_section() {
   /* Define section of route to be handled by this process */
   // Hver process skal have sin egen first og last som angiver antallet af steps der skal beregnes
-  // Eksempel: process 0 tager 0-1000, 1 1000-2000 osv, men process 7 tager 7000-7999 
-  
-  first = taskid * positions / comm_sz;  
+  // Eksempel: process 0 tager 0-1000, 1 1000-2000 osv, men process 7 tager 7000-7999
+
+  int portion = (int) positions / comm_sz;
+  first = taskid * positions / comm_sz;
   if (taskid != comm_sz-1) {
-	last  = first + 1000;  
+        last  = first + portion;
   } else {
-	  last = first + 999;
+          last = first + portion-1;  // sidste position beregnes med i og i-1
   }
+  printf("Process %d working on %d-%d\n", taskid, first, last);
 }
 
 double calc_local_dist() {
-  // Udregner afstanden step for step, og lagrer akumulativt hvert beregning i dist[i]. 
+  // Udregner afstanden step for step, og lagrer akumulativt hvert beregning i dist[i].
   // Altså vil det sidste element af dist[i] indeholde den totale afstand
   int i;
-  double d; 
+  double d;
   dist[first] = 0.0;
   incr[first] = 0.0;
 
@@ -119,7 +121,7 @@ double calc_local_dist() {
     d = distance(lat[i-1], lon[i-1], lat[i], lon[i]); // beregner ved brug af position i-1 of position i
     incr[i] = d;
     /* We only take the flat distance */
-    dist[i] = dist[i-1] + incr[i];  // hvert element angiver akumulativt rutens længde. 
+    dist[i] = dist[i-1] + incr[i];  // hvert element angiver akumulativt rutens længde.
   }
 
   return dist[last];  // returnerer rute længden
@@ -132,7 +134,11 @@ void calc_dist() {
   global_length = mydist;
 }
 
+
 void find_extremes() {
+	// Finder maksimal/minimale værdier. 
+	// Problem når opgaven er spredt ud over processer. 
+	// Løsning: Master gather extremes, og reducer max|min for at få extreme over hele turen
   int i;
   int cur_pos = 0;
   double max_elev, min_elev;
@@ -176,7 +182,7 @@ void find_longest_ascent() {
       /* new rise might start here! */
       cur_ascent = 0.0;
     }
-  } 
+  }
 
   /* Do we end going up ? */
   if (cur_ascent > global_longest_ascent) {
@@ -207,7 +213,7 @@ double distance_below(double height) {
   }
 
   return total;
-}    
+}
 
 double distance_above(double height) {
   int i;
@@ -232,12 +238,12 @@ double distance_above(double height) {
   }
 
   return total;
-}    
+}
 
-/* Find the height at which half the route is above and 
+/* Find the height at which half the route is above and
    the other half below.
-   Done iteratively using bisection. 
-   For quick termination, find integer height for 
+   Done iteratively using bisection.
+   For quick termination, find integer height for
    which above/below difference is smallest.
 */
 void find_height_median() {
@@ -245,7 +251,7 @@ void find_height_median() {
   int med_u =  ceil(global_max_elev);      // Upper bound
 
   double diff_l =  global_length;  // All route above
-  double diff_u = -global_length;  // All route below                            
+  double diff_u = -global_length;  // All route below
   int med;
 
   double global_diff;
@@ -254,15 +260,15 @@ void find_height_median() {
 
   /* Loop invariant:  med_l <= med_u and  diff_u <= 0 <= diff_l */
   while (med_u - med_l > 1) {
-    /* Make a new estimate of the median */ 
+    /* Make a new estimate of the median */
     med = (med_l + med_u)/2;
 
     /* Find total above and below stretchtes for local section */
     above = distance_above(med);
     below = distance_below(med);
-    
+
     diff = above - below;
-    
+
     global_diff = diff;
 
     if (global_diff == 0.0) {
@@ -281,13 +287,13 @@ void find_height_median() {
     }
   }
 
-  /* Take the height with the smallest absolute difference */   
+  /* Take the height with the smallest absolute difference */
   global_height_median =  (abs(diff_u) <= abs(diff_l)) ? med_u : med_l;
 }
 
 // Bedst
-// Viser tiden ud fra den tæller som PC'en selv har kørende. 
-double get_current_time_seconds() { 
+// Viser tiden ud fra den tæller som PC'en selv har kørende.
+double get_current_time_seconds() {
     /* Get current time using clock_gettime using CLOCK_MONOTONIC */
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -326,49 +332,80 @@ void print_height_median(){
 
 
 
-/* Udarbejdet af Julian (S164919) */   
+/* Udarbejdet af Julian (S164919) */
 int main(int argc, char* args[]){
   double start, end; /* timing variables [seconds] */
 
   if (argc < 2) {
     printf("Your must supply a route file\n");
     exit(1);
-  } 
-   
+  }
+
   read_route(args[1]);
 
   MPI_Init(&argc, &args);
   MPI_Comm_rank(MPI_COMM_WORLD, &taskid); // rank for denne process
   MPI_Comm_size(MPI_COMM_WORLD, &comm_sz);  // antal proceser i den givne communicator
-
+  printf("Working processes: %d\n", comm_sz);
 
   if (taskid == MASTER) start = get_current_time_seconds();  // kun master tager timings
 
   define_section();  // Opetter sektioner som process i skal bearbejde
   calc_dist();  // Beregner de givne sektioner
-	
+  find_extremes();
+  
+  /* Samler afstandsberegningerne */ 
   MPI_Barrier(MPI_COMM_WORLD); // Sikrer os at alle processer er færdige med afstandsberegning
-  // Samle alle afstandsberegningerne pr. opgavepunkt 4, som lagres i (double) global_length for alle processer
   int send_sz = 1;
   int recv_sz = 1;
   double* input_buffer;
+  double  output_buffer[comm_sz];
   input_buffer = malloc(recv_sz*sizeof(double));
-  MPI_Allgather(global_length, send_sz, MPI_DOUBLE, input_buffer, recv_sz, MPI_DOUBLE, MPI_COMM_WORLD);  
- 
+  output_buffer[0] = global_length;
+  MPI_Allgather(output_buffer, send_sz, MPI_DOUBLE, input_buffer, recv_sz, MPI_DOUBLE, MPI_COMM_WORLD);
+
+
+  /* Master opsummerer alle resultaterne og printer dernæst summen */
   if (taskid == MASTER) {
-	  double distance;
-	  int i;
-	  for (i = 0; i < comm_sz; i++) {
-		distance = input_buffer[*i];
-		print("DISTANCE %d", distance);
-	  }
+          double total_distance = 0.0;
+          int i;
+          for (i = 0; i < comm_sz; i++) {
+                total_distance = total_distance + input_buffer[i];
+          }
+          printf("Total distance %lf km", total_distance/1000);
   }
-  print_route();
- 
-  find_extremes();
-  print_extremes();
   
-  find_longest_ascent(); 
+  /* Finder de rigtige extremes på tværs af processerne */
+  output_buffer[0] = global_max_elev;
+  MPI_Reduce(output_buffer, input_buffer, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+  global_max_elev = input_buffer[0];
+  //MPI_Allgather(output_buffer, send_sz, MPI_DOUBLE, input_buffer, recv_sz, MPI_DOUBLE, MPI_COMM_WORLD);
+  
+  output_buffer[0] = global_max_elev;
+  //MPI_Allgather(output_buffer, send_sz, MPI_DOUBLE, input_buffer, recv_sz, MPI_DOUBLE, MPI_COMM_WORLD);
+  
+  output_buffer[0] = global_max_elev;
+  //MPI_Allgather(output_buffer, send_sz, MPI_DOUBLE, input_buffer, recv_sz, MPI_DOUBLE, MPI_COMM_WORLD);
+  
+  output_buffer[0] = global_max_elev;
+  //MPI_Allgather(output_buffer, send_sz, MPI_DOUBLE, input_buffer, recv_sz, MPI_DOUBLE, MPI_COMM_WORLD);
+ 
+ /* Master printer de korrekte extremes */
+  if (taskid == MASTER) {
+          printf("Total distance %lf km", global_max_elev);
+  }
+  
+ /*
+  printf("Max elevation: %4.0f m\n",  global_max_elev);
+  printf("Min elevation: %4.0f m\n",  global_min_elev);
+  printf("Max rise:      %4.0f %%\n", global_max_slope*100);
+  printf("Max decline:   %4.0f %%\n", global_min_slope*100);
+
+  */
+  
+  //print_extremes();
+
+  find_longest_ascent();
   print_longest_ascent();
 
   find_height_median();
@@ -376,11 +413,9 @@ int main(int argc, char* args[]){
 
   if (taskid == MASTER) {
         MPI_Barrier(MPI_COMM_WORLD);  // Venter på andre processer
-	end = get_current_time_seconds();
-	printf("Elapsed time: %1.12f sec\n", end-start);		
+        end = get_current_time_seconds();
+        printf("Elapsed time: %1.12f sec\n", end-start);
   }
 
   MPI_Finalize();
 }
-
-
