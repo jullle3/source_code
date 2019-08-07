@@ -379,20 +379,25 @@ int main(int argc, char* args[]){
   output_buffer[0] = global_max_elev;
   MPI_Reduce(output_buffer, input_buffer, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
   global_max_elev = input_buffer[0];
-  //MPI_Allgather(output_buffer, send_sz, MPI_DOUBLE, input_buffer, recv_sz, MPI_DOUBLE, MPI_COMM_WORLD);
   
-  output_buffer[0] = global_max_elev;
-  //MPI_Allgather(output_buffer, send_sz, MPI_DOUBLE, input_buffer, recv_sz, MPI_DOUBLE, MPI_COMM_WORLD);
+  output_buffer[0] = global_min_elev;
+  MPI_Reduce(output_buffer, input_buffer, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
+  global_max_elev = input_buffer[0];
   
-  output_buffer[0] = global_max_elev;
-  //MPI_Allgather(output_buffer, send_sz, MPI_DOUBLE, input_buffer, recv_sz, MPI_DOUBLE, MPI_COMM_WORLD);
+  output_buffer[0] = global_max_slope;
+  MPI_Reduce(output_buffer, input_buffer, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+  global_max_elev = input_buffer[0];
   
-  output_buffer[0] = global_max_elev;
-  //MPI_Allgather(output_buffer, send_sz, MPI_DOUBLE, input_buffer, recv_sz, MPI_DOUBLE, MPI_COMM_WORLD);
- 
+  output_buffer[0] = global_min_slope;
+  MPI_Reduce(output_buffer, input_buffer, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
+  global_max_elev = input_buffer[0];
+  
  /* Master printer de korrekte extremes */
   if (taskid == MASTER) {
-          printf("Total distance %lf km", global_max_elev);
+          printf("Max elevation: %lf m", global_max_elev);
+          printf("Min elevation: %lf m", global_min_elev);
+          printf("Max rise: %lf %", global_max_slope*100);
+          printf("Max decline: %lf %", global_min_slope*100;
   }
   
  /*
