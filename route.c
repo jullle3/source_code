@@ -96,10 +96,15 @@ void read_route(char * name){
 
 void define_section() {
   /* Define section of route to be handled by this process */
-
-  /* This version handles the full route */
-  first = 0;
-  last  = positions-1;
+  // Hver process skal have sin egen first og last som angiver antallet af steps der skal beregnes
+  // Eksempel: process 0 tager 0-1000, 1 1000-2000 osv, men process 7 tager 7000-7999 
+  
+  first = taskid * position / comm_sz;  
+  if (taskid != comm_sz-1) {
+	last  = first + 1000;  
+  } else {
+	  last = first + 999;
+  }
 }
 
 double calc_local_dist() {
