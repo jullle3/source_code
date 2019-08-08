@@ -346,7 +346,6 @@ int main(int argc, char* args[]){
   MPI_Init(&argc, &args);
   MPI_Comm_rank(MPI_COMM_WORLD, &taskid); // rank for denne process
   MPI_Comm_size(MPI_COMM_WORLD, &comm_sz);  // antal proceser i den givne communicator
-  printf("Working processes: %d\n", comm_sz);
 
   if (taskid == MASTER) start = get_current_time_seconds();  // kun master tager timings
 
@@ -367,6 +366,7 @@ int main(int argc, char* args[]){
 
   /* Master opsummerer alle resultaterne og printer dernæst summen */
   if (taskid == MASTER) {
+	    printf("Working processes: %d\n", comm_sz);
           double total_distance = 0.0;
           int i;
           for (i = 0; i < comm_sz; i++) {
@@ -377,6 +377,7 @@ int main(int argc, char* args[]){
   
   /* Finder de rigtige extremes på tværs af processerne */
   output_buffer[0] = global_max_elev; // det der skal sendes
+  
   MPI_Reduce(output_buffer, input_buffer1, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
   
   output_buffer[0] = global_min_elev;
@@ -391,16 +392,17 @@ int main(int argc, char* args[]){
   
  /* Master printer de korrekte extremes */
   if (taskid == MASTER) {
+	  puts("printer extremes");
 	  // Indlæser de fundne extremes
 	  global_max_elev = input_buffer1[0]; 
 	  global_min_elev = input_buffer2[0];
 	  global_max_slope = input_buffer3[0];
 	  global_min_slope = input_buffer4[0];
 	  
-	  printf("Max elevation: %lf m", global_max_elev);
-	  printf("Min elevation: %lf m", global_min_elev);
-	  printf("Max rise: %lf %%", global_max_slope*100);
-	  printf("Max decline: %lf %%", global_min_slope*100);
+	  printf("Max elevation: %lf m\n", global_max_elev);
+	  printf("Min elevation: %lf m\n", global_min_elev);
+	  printf("Max rise: %lf %%\n", global_max_slope*100);
+	  printf("Max decline: %lf %%\n", global_min_slope*100);
   }
   
  /*
@@ -413,11 +415,11 @@ int main(int argc, char* args[]){
   
   //print_extremes();
 
-  find_longest_ascent();
-  print_longest_ascent();
+  //find_longest_ascent();
+  //print_longest_ascent();
 
-  find_height_median();
-  print_height_median();
+ // find_height_median();
+  //print_height_median();
 
   if (taskid == MASTER) {
         MPI_Barrier(MPI_COMM_WORLD);  // Venter på andre processer
