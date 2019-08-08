@@ -358,7 +358,7 @@ int main(int argc, char* args[]){
   MPI_Barrier(MPI_COMM_WORLD); // Sikrer os at alle processer er færdige med afstandsberegning
   int send_sz = 1;
   int recv_sz = 1;
-  double* input_buffer;
+  double* input_buffer, input_buffer1, input_buffer2, input_buffer3, input_buffer4;
   double  output_buffer[comm_sz];
   input_buffer = malloc(recv_sz*sizeof(double));
   output_buffer[0] = global_length;
@@ -376,28 +376,31 @@ int main(int argc, char* args[]){
   }
   
   /* Finder de rigtige extremes på tværs af processerne */
-  output_buffer[0] = global_max_elev;
-  MPI_Reduce(output_buffer, input_buffer, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
-  global_max_elev = input_buffer[0];
+  output_buffer[0] = global_max_elev; // det der skal sendes
+  MPI_Reduce(output_buffer, input_buffer1, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
   
   output_buffer[0] = global_min_elev;
-  MPI_Reduce(output_buffer, input_buffer, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
-  global_max_elev = input_buffer[0];
+  MPI_Reduce(output_buffer, input_buffer2, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
   
   output_buffer[0] = global_max_slope;
-  MPI_Reduce(output_buffer, input_buffer, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
-  global_max_elev = input_buffer[0];
-  
+  MPI_Reduce(output_buffer, input_buffer3, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+ 
   output_buffer[0] = global_min_slope;
-  MPI_Reduce(output_buffer, input_buffer, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
-  global_max_elev = input_buffer[0];
+  MPI_Reduce(output_buffer, input_buffer4, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
+  
   
  /* Master printer de korrekte extremes */
   if (taskid == MASTER) {
-          printf("Max elevation: %lf m", global_max_elev);
-          printf("Min elevation: %lf m", global_min_elev);
-          printf("Max rise: %lf %", global_max_slope*100);
-          printf("Max decline: %lf %", global_min_slope*100;
+	  // Indlæser de fundne extremes
+	  global_max_elev = input_buffer1[0]; 
+	  global_min_elev = input_buffer2[0];
+	  global_max_slope = input_buffer3[0];
+	  global_min_slope = input_buffer4[0];
+	  
+	  printf("Max elevation: %lf m", global_max_elev);
+	  printf("Min elevation: %lf m", global_min_elev);
+	  printf("Max rise: %lf %%", global_max_slope*100);
+	  printf("Max decline: %lf %%", global_min_slope*100);
   }
   
  /*
