@@ -1,3 +1,5 @@
+# Renamer alle filer i i en given mappe ved brug af rekursive funktionskald
+
 import os
 
 filename = 0
